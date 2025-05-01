@@ -1,16 +1,20 @@
 package com.sky.service.impl;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.constant.PasswordConstant;
 import com.sky.constant.StatusConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
+import com.sky.dto.EmployeePageQueryDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
+import com.sky.result.PageResult;
 import com.sky.service.EmployeeService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.BeanUtils;
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -27,7 +32,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private EmployeeMapper employeeMapper;
 
     /**
-     * 员工登录
+     * 員工登錄
      *
      * @param employeeLoginDTO
      * @return
@@ -36,29 +41,29 @@ public class EmployeeServiceImpl implements EmployeeService {
         String username = employeeLoginDTO.getUsername();
         String password = employeeLoginDTO.getPassword();
 
-        //1、根据用户名查询数据库中的数据
+        //1、根據用戶名查詢數據庫中的數據
         Employee employee = employeeMapper.getByUsername(username);
 
-        //2、处理各种异常情况（用户名不存在、密码不对、账号被锁定）
+        //2、處理各種異常情況（用戶名不存在、密碼不對、帳號被鎖定）
         if (employee == null) {
-            //账号不存在
+            //帳號不存在
             throw new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
         }
 
-        //密码比对
-        //后期需要进行md5加密，然后再进行比对
+        //密碼比對
+        //後期需要進行md5加密，然後再進行比對
         password = DigestUtils.md5DigestAsHex(password.getBytes());
         if (!password.equals(employee.getPassword())) {
-            //密码错误
+            //密碼錯誤
             throw new PasswordErrorException(MessageConstant.PASSWORD_ERROR);
         }
 
         if (employee.getStatus() == StatusConstant.DISABLE) {
-            //账号被锁定
+            //帳號被鎖定
             throw new AccountLockedException(MessageConstant.ACCOUNT_LOCKED);
         }
 
-        //3、返回实体对象
+        //3、返回實體對象
         return employee;
     }
 
@@ -90,8 +95,25 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setUpdateUser(BaseContext.getCurrentId());
 
         employeeMapper.insert(employee);
+    }
 
+    /**
+     * 分页查询
+     *
+     * @param employeePageQueryDTO
+     * @return
+     */
+    @Override
+    public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) {
+        // select * from employee limit 0,10
+        //开始分页查询
+        PageHelper.startPage(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
+        Page<Employee> page = employeeMapper.pageQuery(employeePageQueryDTO);
 
+        long total = page.getTotal();
+        List<Employee> result = page.getResult();
+
+        return new PageResult(total, result);
     }
 
 }

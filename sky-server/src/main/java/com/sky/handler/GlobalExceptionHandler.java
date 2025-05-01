@@ -17,7 +17,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
 public class GlobalExceptionHandler {
 
     /**
-     * 捕获业务异常
+     * 捕獲業務異常
      *
      * @param ex
      * @return
@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理sql异常
+     * 處理sql異常
      *
      * @param ex
      * @return
